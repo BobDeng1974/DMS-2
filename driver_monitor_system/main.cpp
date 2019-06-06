@@ -186,6 +186,7 @@ int main(int argc, char *argv[]) {
         double msrate = -1;
         cv::Mat prev_frame, next_frame;
         std::list<Face::Ptr> faces;
+        // std::vector<cv::Rect> bboxes;
         size_t id = 0;
 
         if (FLAGS_fps > 0) {
@@ -194,7 +195,7 @@ int main(int argc, char *argv[]) {
 
         Visualizer::Ptr visualizer;
         // PhoneSmokeVisualizer::Ptr ps_visualizer;
-        PhotoFrameVisualizer::Ptr pf_visualizer;
+        // PhotoFrameVisualizer::Ptr pf_visualizer;
         if (!FLAGS_no_show || !FLAGS_o.empty()) {
             visualizer = std::make_shared<Visualizer>(cv::Size(width, height));
             if (!FLAGS_no_show_emotion_bar && emotionsDetector.enabled()) {
@@ -236,8 +237,7 @@ int main(int argc, char *argv[]) {
             if(!prev_detection_results.empty()){
                 auto max_face_result = faceDetector.maxFace & cv::Rect(0, 0, width, height);
                 cv::Mat face = prev_frame(max_face_result);
-                pf_visualizer->draw(prev_frame, max_face_result, color);
-                std::cout << "face1 : " << face.cols << " x " << face.rows << std::endl;
+                cv::rectangle(prev_frame, max_face_result, color);
                 phoneSmokeDetector.enqueue(face);
                 phoneSmokeDetector.submitRequest();
                 phoneSmokeDetector.wait();
@@ -245,18 +245,26 @@ int main(int argc, char *argv[]) {
             }
 
             auto prev_ps_results = phoneSmokeDetector.results;
-            std::cout << "ps size : " << prev_ps_results.size() << std::endl;
-            // for(auto &&boxes : prev_ps_results){
-            //     std::cout << "ps size : " << prev_ps_results.size() << std::endl;
+            // bboxes.clear();
+            for(auto&& bbox : prev_ps_results){
+                // int label = bbox.label;
+                auto facebox = faceDetector.maxFace & cv::Rect(0, 0, width, height);
+                auto clippedRect = bbox.location & facebox;
+                clippedRect.x += facebox.x;
+                clippedRect.y += facebox.y;
+                auto box = clippedRect & cv::Rect(0, 0, width, height);
+                cv::rectangle(prev_frame, box, color);
+                // bboxes.push_back(clippedRect);
+            }
+            // if(!bboxes.empty()){
+            //     ps_visualizer->draw(prev_frame, bboxes);
             // }
-
 
             // Filling inputs of face analytics networks
             for (auto &&face : prev_detection_results) {
                 if (isFaceAnalyticsEnabled) {
                     auto clippedRect = face.location & cv::Rect(0, 0, width, height);
                     cv::Mat face = prev_frame(clippedRect);
-                    std::cout << "face2 : " << face.cols << " x " << face.rows << std::endl;
                     ageGenderDetector.enqueue(face);
                     headPoseDetector.enqueue(face);
                     emotionsDetector.enqueue(face);
@@ -364,6 +372,7 @@ int main(int argc, char *argv[]) {
 
                 // drawing faces
                 visualizer->draw(prev_frame, faces);
+
 
                 // drawing phone smoke
                 // ps_visualizer->draw(prev_frame, prev_ps_results);

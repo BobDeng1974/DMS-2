@@ -76,11 +76,12 @@ void PhotoFrameVisualizer::draw(cv::Mat& img, cv::Rect& bb, cv::Scalar color) {
 PhoneSmokeVisualizer::PhoneSmokeVisualizer(int bbThickness, cv::Scalar phoneColor, cv::Scalar smokeColor):
                         bbThickness(bbThickness), phoneColor(phoneColor), smokeColor(smokeColor)  {
 }
-void PhoneSmokeVisualizer::draw(cv::Mat& img, std::vector<PhoneSmokeDetection::Result> &results) {
-    for(auto& bb : results){
+void PhoneSmokeVisualizer::draw(cv::Mat& img, std::vector<PhoneSmokeDetection::Result>& results) {
+    for(auto&& bb : results){
         int label = bb.label;
+        std::cout << "label : " << label << std::endl;
         cv::Scalar color = label == 1 ? smokeColor : phoneColor;
-        cv::rectangle(img, bb.location, color, bbThickness);
+        cv::rectangle(img, bb.location, color);
     }
 }
 

@@ -223,9 +223,7 @@ void FaceDetection::fetchResults() {
         if(r.location.area() > area){
             area = r.location.area();
             maxFace = r.location;
-        }
-        // enlarge face bounding box for more robust operation of phone smoke detection networks
-        if(i == maxProposalCount - 1){
+            std::cout << " done !" << std::endl;
             int w = maxFace.width;
             int h = maxFace.height;
             int x = maxFace.x + w / 2;
@@ -238,6 +236,7 @@ void FaceDetection::fetchResults() {
             maxFace.width = new_w;
             maxFace.height = new_h;
         }
+        // enlarge face bounding box for more robust operation of phone smoke detection networks
 
         // Make square and enlarge face bounding box for more robust operation of face analytics networks
         int bb_width = r.location.width;
